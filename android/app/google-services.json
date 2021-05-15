@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "396467899033",
+    "firebase_url": "https://flutter-all-in-one-testing.firebaseio.com",
+    "project_id": "flutter-all-in-one-testing",
+    "storage_bucket": "flutter-all-in-one-testing.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396467899033:android:293efdef4ae94f7f664608",
+        "android_client_info": {
+          "package_name": "id.net.bengkelrobot.flutter_muzik_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "396467899033-f369devr0bkl7mretk44m7u2gouv12sj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "id.net.bengkelrobot.flutter_muzik_app",
+            "certificate_hash": "29065073dc5849930854978a96f9f09f783760a3"
+          }
+        },
+        {
+          "client_id": "396467899033-1hj1k9v577s64qe256rfdtnl38a93eg2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmBKlnBuFW9vzUEEltHa0vIGnKFdymd3E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "396467899033-1hj1k9v577s64qe256rfdtnl38a93eg2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "396467899033-5no88lnqfc0bcmkrafoicnaa98tor995.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.flutterFirebaseStorage"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
