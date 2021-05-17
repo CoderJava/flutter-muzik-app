@@ -7,6 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// https://github.com/FilledStacks/responsive_builder/blob/master/lib/src/sizing_information.dart#L85
+final _mobileExtraLarge = 480.0;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -98,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
     return Center(
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16),
-        width: widthScreen > 480 ? 480 : double.infinity,
+        width: widthScreen > _mobileExtraLarge ? _mobileExtraLarge : double.infinity,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -137,7 +140,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
-                return value == null || value.isEmpty ? 'Enter an email address' : null;
+                if (value == null || value.isEmpty) {
+                  return 'Enter an email address';
+                } else {
+                  final isEmailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value);
+                  return isEmailValid ? null : 'Invalid email';
+                }
               },
               textInputAction: TextInputAction.next,
             ),
@@ -276,15 +284,16 @@ class _LoginPageState extends State<LoginPage> {
           (_) => false,
         );
       } on FirebaseAuthException catch (error) {
-        // TODO: buat UI pesan error gagal login
         final errorCode = error.code;
+        var errorMessage = '';
         if (errorCode == 'user-not-found') {
-          debugPrint('No user found for that email.');
+          errorMessage = 'No user found for that email.';
         } else if (errorCode == 'wrong-password') {
-          debugPrint('Wrong password provided for that user.');
+          errorMessage = 'Wrong password provided for that user.';
         } else {
-          debugPrint('error: ${error.toString()}');
+          errorMessage = '$error';
         }
+        _showSnackBar(context, errorMessage, widthScreen);
         setState(() => isLoading = false);
       }
     }
@@ -438,4 +447,26 @@ EdgeInsets _setPaddingButton() {
           );
   }
   return padding;
+}
+
+void _showSnackBar(BuildContext context, String message, double widthScreen) {
+  if (widthScreen > _mobileExtraLarge) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+        ),
+        behavior: SnackBarBehavior.floating,
+        width: _mobileExtraLarge,
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+        ),
+      ),
+    );
+  }
 }
