@@ -45,7 +45,7 @@ class _SplashPageState extends State<SplashPage> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => user == null ? LoginPage() : HomePage(),
+            builder: (context) => user != null && user.emailVerified ? HomePage() : LoginPage(),
           ),
           (_) => false,
         );
@@ -143,7 +143,9 @@ class _LoginPageState extends State<LoginPage> {
                 if (value == null || value.isEmpty) {
                   return 'Enter an email address';
                 } else {
-                  final isEmailValid = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+").hasMatch(value);
+                  final isEmailValid = RegExp(
+                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+                  ).hasMatch(value);
                   return isEmailValid ? null : 'Invalid email';
                 }
               },
@@ -273,16 +275,21 @@ class _LoginPageState extends State<LoginPage> {
         setState(() => isLoading = true);
         final email = controllerUsername.text.trim();
         final password = controllerPassword.text.trim();
-        await firebaseAuth.signInWithEmailAndPassword(
+        final userCredential = await firebaseAuth.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
         setState(() => isLoading = false);
-        await Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => HomePage()),
-          (_) => false,
-        );
+        if (userCredential.user != null && userCredential.user!.emailVerified) {
+          await Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+            (_) => false,
+          );
+        } else {
+          await userCredential.user!.sendEmailVerification();
+          _showSnackBar(context, 'Please verify your email', widthScreen);
+        }
       } on FirebaseAuthException catch (error) {
         final errorCode = error.code;
         var errorMessage = '';
