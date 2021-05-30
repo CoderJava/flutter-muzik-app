@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // https://github.com/FilledStacks/responsive_builder/blob/master/lib/src/sizing_information.dart#L85
@@ -122,6 +123,13 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Text(
+              'Sign In',
+              style: Theme.of(context).textTheme.headline6?.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(height: 16),
             TextFormField(
               controller: controllerUsername,
               decoration: InputDecoration(
@@ -139,16 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                 color: Colors.white,
               ),
               keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Enter an email address';
-                } else {
-                  final isEmailValid = RegExp(
-                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
-                  ).hasMatch(value);
-                  return isEmailValid ? null : 'Invalid email';
-                }
-              },
+              validator: emailValidator,
               textInputAction: TextInputAction.next,
             ),
             SizedBox(height: 16),
@@ -312,7 +311,12 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         InkWell(
           onTap: () {
-            // TODO: fitur forgot password
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ForgotPasswordPage(),
+              ),
+            );
           },
           child: Focus(
             focusNode: focusNodeForgotPassword,
@@ -326,14 +330,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ],
-    );
-  }
-
-  InputBorder _createUnderlineInputBorder() {
-    return UnderlineInputBorder(
-      borderSide: BorderSide(
-        color: Colors.white,
-      ),
     );
   }
 }
@@ -475,5 +471,189 @@ void _showSnackBar(BuildContext context, String message, double widthScreen) {
         ),
       ),
     );
+  }
+}
+
+InputBorder _createUnderlineInputBorder() {
+  return UnderlineInputBorder(
+    borderSide: BorderSide(
+      color: Colors.white,
+    ),
+  );
+}
+
+class ForgotPasswordPage extends StatefulWidget {
+  @override
+  _ForgotPasswordPageState createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final formState = GlobalKey<FormState>();
+  final controllerEmail = TextEditingController();
+  final firebaseAuth = FirebaseAuth.instance;
+  final focusNodeLabelForgotPassword = FocusNode();
+  final focusNodeLabelResetPasswordCode = FocusNode();
+
+  var widthScreen = 0.0;
+  var isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQueryData = MediaQuery.of(context);
+    widthScreen = mediaQueryData.size.width;
+    return Scaffold(
+      body: Stack(
+        children: [
+          _buildWidgetImageBackground(),
+          _buildWidgetOverlayImageBackground(),
+          _buildWidgetContent(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWidgetContent() {
+    return Center(
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        width: widthScreen > _mobileExtraLarge ? _mobileExtraLarge : double.infinity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildWidgetTitleApp(context),
+            SizedBox(height: 48),
+            _buildWidgetForm(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWidgetForm() {
+    return IgnorePointer(
+      ignoring: isLoading,
+      child: _buildWidgetFormResetPassword(),
+    );
+  }
+
+  Widget _buildWidgetFormResetPassword() {
+    return Form(
+      key: formState,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Focus(
+            focusNode: focusNodeLabelForgotPassword,
+            child: Text(
+              'Forgot Password',
+              style: Theme.of(context).textTheme.headline6?.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+          ),
+          SizedBox(height: 16),
+          TextFormField(
+            controller: controllerEmail,
+            decoration: InputDecoration(
+              hintText: 'Email',
+              hintStyle: TextStyle(
+                color: Colors.grey[500],
+              ),
+              enabledBorder: _createUnderlineInputBorder(),
+              icon: Icon(
+                CupertinoIcons.mail,
+                color: Colors.white,
+              ),
+            ),
+            style: TextStyle(
+              color: Colors.white,
+            ),
+            keyboardType: TextInputType.emailAddress,
+            validator: emailValidator,
+            textInputAction: TextInputAction.next,
+            onFieldSubmitted: (_) {
+              _doResetPasswordByEmail();
+            },
+          ),
+          SizedBox(height: 24),
+          _buildWidgetButtonResetPassword(),
+          SizedBox(height: 24),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Back to signin'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWidgetButtonResetPassword() {
+    Widget? widgetLoading;
+    if (isLoading) {
+      if (kIsWeb) {
+        widgetLoading = SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Colors.white,
+            ),
+            strokeWidth: 2,
+          ),
+        );
+      } else {
+        widgetLoading = Platform.isIOS || Platform.isMacOS
+            ? CupertinoActivityIndicator()
+            : SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.white,
+                  ),
+                  strokeWidth: 2,
+                ),
+              );
+      }
+    }
+    final padding = _setPaddingButton();
+    return ElevatedButton(
+      onPressed: () {
+        _doResetPasswordByEmail();
+      },
+      child: widgetLoading ?? Text('RESET PASSWORD'),
+      style: ElevatedButton.styleFrom(
+        padding: padding,
+      ),
+    );
+  }
+
+  void _doResetPasswordByEmail() async {
+    if (formState.currentState!.validate()) {
+      focusNodeLabelForgotPassword.requestFocus();
+      setState(() => isLoading = true);
+      final email = controllerEmail.text.trim();
+      await firebaseAuth.sendPasswordResetEmail(email: email);
+      setState(() => isLoading = false);
+      _showSnackBar(
+        context,
+        'We have sent a link reset password to your email',
+        widthScreen,
+      );
+      Navigator.pop(context);
+    }
+  }
+}
+
+String? emailValidator(String? value) {
+  if (value == null || value.isEmpty) {
+    return 'Enter an email address';
+  } else {
+    final isEmailValid = RegExp(
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+    ).hasMatch(value);
+    return isEmailValid ? null : 'Invalid email';
   }
 }
