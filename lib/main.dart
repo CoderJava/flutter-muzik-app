@@ -139,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 enabledBorder: _createUnderlineInputBorder(),
                 icon: Icon(
-                  CupertinoIcons.person,
+                  CupertinoIcons.mail,
                   color: Colors.white,
                 ),
               ),
@@ -206,7 +206,12 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 InkWell(
                   onTap: () {
-                    // TODO: buat fitur register
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RegisterPage(),
+                      ),
+                    );
                   },
                   child: Text(
                     'Join Now',
@@ -286,7 +291,6 @@ class _LoginPageState extends State<LoginPage> {
             (_) => false,
           );
         } else {
-          await userCredential.user!.sendEmailVerification();
           _showSnackBar(context, 'Please verify your email', widthScreen);
         }
       } on FirebaseAuthException catch (error) {
@@ -331,6 +335,217 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ],
     );
+  }
+}
+
+class RegisterPage extends StatefulWidget {
+  @override
+  _RegisterPageState createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final formState = GlobalKey<FormState>();
+  final controllerEmail = TextEditingController();
+  final controllerPassword = TextEditingController();
+  final firebaseAuth = FirebaseAuth.instance;
+  final focusNodeLabelSignUp = FocusNode();
+
+  var widthScreen = 0.0;
+  var isVisiblePassword = false;
+  var isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQueryData = MediaQuery.of(context);
+    widthScreen = mediaQueryData.size.width;
+    return Scaffold(
+      body: Stack(
+        children: [
+          _buildWidgetImageBackground(),
+          _buildWidgetOverlayImageBackground(),
+          _buildWidgetContent(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWidgetContent() {
+    return Center(
+      child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          width: widthScreen > _mobileExtraLarge ? _mobileExtraLarge : double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildWidgetTitleApp(context),
+              SizedBox(height: 48),
+              _buildWidgetFormRegister(),
+            ],
+          )),
+    );
+  }
+
+  Widget _buildWidgetFormRegister() {
+    return IgnorePointer(
+      ignoring: isLoading,
+      child: Form(
+        key: formState,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              'Create Account',
+              style: Theme.of(context).textTheme.headline6?.copyWith(
+                    color: Colors.white,
+                  ),
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              controller: controllerEmail,
+              decoration: InputDecoration(
+                hintText: 'Email',
+                hintStyle: TextStyle(
+                  color: Colors.grey[500],
+                ),
+                enabledBorder: _createUnderlineInputBorder(),
+                icon: Icon(
+                  CupertinoIcons.mail,
+                  color: Colors.white,
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              keyboardType: TextInputType.emailAddress,
+              validator: emailValidator,
+              textInputAction: TextInputAction.next,
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              controller: controllerPassword,
+              decoration: InputDecoration(
+                hintText: 'Password',
+                hintStyle: TextStyle(
+                  color: Colors.grey[500],
+                ),
+                enabledBorder: _createUnderlineInputBorder(),
+                icon: Icon(
+                  CupertinoIcons.lock,
+                  color: Colors.white,
+                ),
+                suffixIcon: InkWell(
+                  onTap: () => setState(() => isVisiblePassword = !isVisiblePassword),
+                  child: Icon(
+                    isVisiblePassword ? CupertinoIcons.eye : CupertinoIcons.eye_slash,
+                    color: Colors.grey[500],
+                    size: 20,
+                  ),
+                ),
+                suffixIconConstraints: BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+              ),
+              style: TextStyle(
+                color: Colors.white,
+              ),
+              obscureText: !isVisiblePassword,
+              obscuringCharacter: '•',
+              validator: (value) {
+                return value == null || value.isEmpty ? 'Enter a password' : null;
+              },
+              textInputAction: TextInputAction.go,
+              onFieldSubmitted: (value) {
+                _doRegisterByEmailAndPassword();
+              },
+            ),
+            SizedBox(height: 24),
+            _buildWidgetButtonSignUp(),
+            SizedBox(height: 24),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Back to signin'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWidgetButtonSignUp() {
+    Widget? widgetLoading;
+    if (isLoading) {
+      if (kIsWeb) {
+        widgetLoading = SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Colors.white,
+            ),
+            strokeWidth: 2,
+          ),
+        );
+      } else {
+        widgetLoading = Platform.isIOS || Platform.isMacOS
+            ? CupertinoActivityIndicator()
+            : SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.white,
+                  ),
+                  strokeWidth: 2,
+                ),
+              );
+      }
+    }
+    final padding = _setPaddingButton();
+    return ElevatedButton(
+      onPressed: () {
+        _doRegisterByEmailAndPassword();
+      },
+      child: widgetLoading ?? Text('SIGN UP'),
+      style: ElevatedButton.styleFrom(
+        padding: padding,
+      ),
+    );
+  }
+
+  void _doRegisterByEmailAndPassword() async {
+    if (formState.currentState!.validate()) {
+      focusNodeLabelSignUp.requestFocus();
+      try {
+        setState(() => isLoading = true);
+        final email = controllerEmail.text.trim();
+        final password = controllerPassword.text.trim();
+        final userCredential = await firebaseAuth.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        userCredential.user!.sendEmailVerification();
+        setState(() => isLoading = false);
+        _showSnackBar(
+          context,
+          'We have sent a link verification to your email.',
+          widthScreen,
+        );
+        Navigator.pop(context);
+      } on FirebaseAuthException catch (error) {
+        final errorCode = error.code;
+        var errorMessage = '';
+        if (errorCode == 'weak-password') {
+          errorMessage = 'The password provided is too weak.';
+        } else if (errorCode == 'email-already-in-use') {
+          errorMessage = 'The account already exists for that email.';
+        } else {
+          errorMessage = '$error';
+        }
+        _showSnackBar(context, errorMessage, widthScreen);
+        setState(() => isLoading = false);
+      }
+    }
   }
 }
 
