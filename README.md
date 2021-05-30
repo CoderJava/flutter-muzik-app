@@ -1,16 +1,31 @@
-# flutter_muzik_app
+# Flutter Muzik App
 
-A new Flutter project.
+A simple application to implement Firebase Auth in Flutter.
 
-## Getting Started
+### Screenshots
+🚧 Coming soon 🚧
 
-This project is a starting point for a Flutter application.
+### Firebase Auth Email
+| Method | Android | iOS | Web | MacOS |
+|:------ |:-------:|:---:|:---:|:-----:|
+| Sign up | &check;| &check; | &check; | &check; |
+| Sign in | &check;| &check; | &check; | &check; |
+| Reset password | &check;| &check; | &check; | &check; |
 
-A few resources to get you started if this is your first Flutter project:
+### Firebase Auth Phone
+🚧 Coming soon 🚧
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+### Firebase Auth Google
+🚧 Coming soon 🚧
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Firebase Auth Facebook
+🚧 Coming soon 🚧
+
+### Firebase Auth Twitter
+🚧 Coming soon 🚧
+
+### Firebase Auth Github
+🚧 Coming soon 🚧
+
+### Firebase Auth Yahoo
+🚧 Coming soon 🚧
